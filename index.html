@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Docker Build</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --border: #1e2330;
+      --accent: #00e5ff;
+      --accent2: #7c3aed;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --mono: 'Space Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow orb */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 72px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border: 1.5px solid var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px rgba(0,229,255,0.2);
+    }
+
+    .logo svg { width: 22px; height: 22px; }
+
+    .brand {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .tag {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    /* Hero */
+    .hero {
+      margin-bottom: 64px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .hero h1 {
+      font-family: var(--mono);
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+      text-shadow: 0 0 24px rgba(0,229,255,0.4);
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 480px;
+      line-height: 1.7;
+    }
+
+    /* Terminal block */
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 48px;
+      animation: fadeUp 0.7s 0.2s ease both;
+      box-shadow: 0 0 40px rgba(0,0,0,0.4);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #0d0f14;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.red   { background: #ff5f57; }
+    .dot.yellow{ background: #ffbd2e; }
+    .dot.green { background: #28c840; }
+
+    .terminal-title {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .terminal-body {
+      padding: 24px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .line { display: flex; gap: 12px; }
+    .prompt { color: var(--accent2); user-select: none; }
+    .cmd { color: var(--text); }
+    .comment { color: var(--muted); }
+    .output { color: #4ade80; padding-left: 24px; }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 64px;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .card h3 {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 16px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      animation: fadeUp 0.7s 0.4s ease both;
+      flex-wrap: wrap;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+      animation: pulse 2s infinite;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 64px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--border);
+      animation: fadeUp 0.7s 0.5s ease both;
+    }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* Cursor blink */
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5">
+          <rect x="2" y="8" width="5" height="5" rx="1"/>
+          <rect x="9" y="8" width="5" height="5" rx="1"/>
+          <rect x="16" y="8" width="6" height="5" rx="1"/>
+          <rect x="5.5" y="3" width="5" height="5" rx="1"/>
+          <rect x="12.5" y="3" width="5" height="5" rx="1"/>
+          <path d="M4.5 13v4M12 13v4M19 13v4M12 17h8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="brand">Docker Build</span>
+      <span class="tag">v0.1.0</span>
+    </header>
+
+    <section class="hero">
+      <h1>Ship faster<br/>with <span>containers</span>.</h1>
+      <p>A minimal FastAPI application containerised with Docker. Build once, run anywhere.</p>
+    </section>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span class="terminal-title">bash — docker-build</span>
+      </div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">docker build -t docker-build .</span></div>
+        <div class="line"><span class="output">✓ Successfully built image</span></div>
+        <div class="line" style="margin-top:8px">
+          <span class="prompt">$</span><span class="cmd">docker run -p 8000:8000 docker-build</span>
+        </div>
+        <div class="line"><span class="output">✓ Uvicorn running on http://0.0.0.0:8000</span></div>
+        <div class="line" style="margin-top:8px">
+          <span class="prompt">$</span><span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>FastAPI</h3>
+        <p>High-performance async API framework with automatic OpenAPI docs at <code style="color:var(--accent)">/docs</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🐳</div>
+        <h3>Docker</h3>
+        <p>Containerised with Python 3.13-slim for a lean, production-ready image.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🚀</div>
+        <h3>Uvicorn</h3>
+        <p>Lightning-fast ASGI server, serving on port <code style="color:var(--accent)">8000</code> out of the box.</p>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="pulse"></span>
+        <span>Service running</span>
+      </div>
+      <div class="status-item">
+        <span style="color:#00e5ff">●</span>
+        <span>GET /health → 200 OK</span>
+      </div>
+      <div class="status-item">
+        <span style="color:#7c3aed">●</span>
+        <span>Python 3.13</span>
+      </div>
+      <div class="status-item" style="margin-left:auto">
+        <span>port 8000</span>
+      </div>
+    </div>
+
+    <footer>docker-build · fastapi · uvicorn · python 3.13</footer>
+
+  </div>
+</body>
+</html>
